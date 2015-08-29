@@ -2,15 +2,73 @@ package com.aakash.jarvis.manifestotracker;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
 
+    TextView output;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        output = (TextView) findViewById(R.id.textView);
+        String url = "http://manifesto-api.herokuapp.com/manifestos";
+        JsonArrayRequest jsonRequest = new JsonArrayRequest
+                (Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        Log.d("Aakash", response.toString());
+                        try {
+
+                             String jsonResponse = "";
+                            for (int i = 0; i < response.length(); i++) {
+
+                                JSONObject person = (JSONObject) response.get(i);
+
+                                String name = person.getString("name");
+                                String organizer = person.getString("organizer");
+
+                                jsonResponse += "Name: " + name + "\n\n";
+                                jsonResponse += "Organizer" + organizer + "\n\n";
+
+                            }
+
+                            output.setText(jsonResponse);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(),
+                                    "Error: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        error.printStackTrace();
+                    }
+                });
+
+        Volley.newRequestQueue(this).add(jsonRequest);
+
+
     }
 
     @Override
