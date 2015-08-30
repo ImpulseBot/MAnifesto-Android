@@ -2,6 +2,8 @@ package com.aakash.jarvis.manifestotracker;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +16,11 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends Activity {
 
@@ -23,13 +30,27 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final RecyclerView manifestoList = (RecyclerView) findViewById(R.id.manifesto_list);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        manifestoList.setLayoutManager(llm);
+
         String url = "http://manifesto-api.herokuapp.com/manifestos/";
         JsonArrayRequest jsonRequest = new JsonArrayRequest
             (Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
                 @Override
                 public void onResponse(JSONArray response) {
                     Log.d("chi6rag", "Response:\t"+response);
-
+                    List<JSONObject> manifestos = new ArrayList<>();
+                    for(int i=0; i < response.length(); i++){
+                        try {
+                            manifestos.add(response.getJSONObject(i));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    Log.d("chi6rag", ""+manifestos.getClass());
+                    RVAdapter adapter = new RVAdapter(manifestos);
+                    manifestoList.setAdapter(adapter);
                 }
             }, new Response.ErrorListener() {
                 @Override
@@ -37,6 +58,7 @@ public class MainActivity extends Activity {
                     error.printStackTrace();
                 }
             });
+
 
         Volley.newRequestQueue(this).add(jsonRequest);
 
